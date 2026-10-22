@@ -1,0 +1,47 @@
+{
+  "id": "bookoo-mini.reaplugin",
+  "name": "BooKoo Mini Scale",
+  "author": "Roy Ackerman; Decaid contributors",
+  "description": "BooKoo Themis Mini BLE scale with optional firmware v1.4.2 keep-awake and power-off support.",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "permissions": ["transport.ble", "log"],
+  "drivers": [{
+    "id": "bookoo",
+    "type": "scale",
+    "capabilities": ["battery", "tare", "timerControl", "timerTelemetry", "flow", "disconnectToSleep"],
+    "ble": {
+      "match": {
+        "name": {"contains": "bookoo"},
+        "serviceUuids": ["00000ffe-0000-1000-8000-00805f9b34fb"]
+      }
+    }
+  }],
+  "settings": {
+    "Firmware142Commands": {
+      "type": "boolean",
+      "label": "Enable firmware v1.4.2 power commands",
+      "description": "Enable only after installing Themis Mini firmware v1.4.2 or later. Leave off for v1.4.1. Enables the two power options below; firmware cannot be detected automatically.",
+      "default": false
+    },
+    "KeepAwake": {
+      "type": "boolean",
+      "label": "Keep scale awake while connected",
+      "description": "Requires the firmware power commands above. Resets the scale's auto-off countdown on connection and every 60 seconds. Enable Decaid scale power management to disconnect when the machine sleeps.",
+      "default": true
+    },
+    "PowerOffOnDisconnect": {
+      "type": "boolean",
+      "label": "Power off on intentional disconnect",
+      "description": "Requires the firmware power commands above. Sends shutdown before a healthy scale disconnects, including machine sleep, manual disconnect and switching scales. Plugin reload/unload and connection failures skip shutdown.",
+      "default": true
+    },
+    "PacketTimeoutMs": {
+      "type": "number",
+      "label": "Weight notification timeout (milliseconds)",
+      "description": "Reports a lost protocol stream to Decaid after this many milliseconds without a valid weight packet. Default 2000; allowed range 1000 to 30000. Increase only if hardware testing shows a slower normal notification cadence.",
+      "default": 2000
+    }
+  },
+  "api": []
+}

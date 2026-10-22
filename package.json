@@ -1,0 +1,15 @@
+{
+  "name": "decaid-bookoo-mini-driver",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BooKoo Themis Mini BLE scale driver for Decaid 0.9.0",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check bookoo-mini.reaplugin/plugin.js",
+    "build": "npm run check && npm test && node scripts/package.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
