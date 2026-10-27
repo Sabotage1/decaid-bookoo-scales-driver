@@ -1,9 +1,9 @@
 {
   "id": "bookoo-mini.reaplugin",
-  "name": "BooKoo Mini Scale",
+  "name": "BooKoo Scales Driver",
   "author": "Roy Ackerman; Decaid contributors",
-  "description": "BooKoo Themis Mini BLE scale with optional firmware v1.4.2 keep-awake and power-off support.",
-  "version": "0.1.0",
+  "description": "BooKoo Themis Mini and Ultra BLE scales with firmware-specific shutdown and keep-awake options.",
+  "version": "0.2.0",
   "apiVersion": 1,
   "permissions": ["transport.ble", "log"],
   "drivers": [{
@@ -18,22 +18,29 @@
     }
   }],
   "settings": {
+    "PowerCommandSupport": {
+      "type": "enum",
+      "label": "Power command compatibility",
+      "description": "Choose Disabled for older/unknown firmware, Shutdown only for Ultra v4.0.0, or Shutdown and keep-awake for Ultra v4.0.1+ / Mini v1.4.2+. Applies to every scale connected by this plugin. Legacy Mini setting preserves the previous firmware checkbox.",
+      "values": ["Legacy Mini setting", "Disabled", "Shutdown only", "Shutdown and keep-awake"],
+      "default": "Legacy Mini setting"
+    },
     "Firmware142Commands": {
       "type": "boolean",
-      "label": "Enable firmware v1.4.2 power commands",
-      "description": "Enable only after installing Themis Mini firmware v1.4.2 or later. Leave off for v1.4.1. Enables the two power options below; firmware cannot be detected automatically.",
+      "label": "Mini v1.4.2 power commands (legacy setting)",
+      "description": "Used only when Power command compatibility is Legacy Mini setting. Existing Mini users keep their saved choice. Leave off on Mini v1.4.1. Use the compatibility selector for Ultra firmware; this checkbox does not detect model or firmware.",
       "default": false
     },
     "KeepAwake": {
       "type": "boolean",
       "label": "Keep scale awake while connected",
-      "description": "Requires the firmware power commands above. Resets the scale's auto-off countdown on connection and every 60 seconds. Enable Decaid scale power management to disconnect when the machine sleeps.",
+      "description": "Requires Shutdown and keep-awake compatibility (Ultra v4.0.1+ or Mini v1.4.2+). Resets auto-off on connection and every 60 seconds. Enable Decaid scale power management to disconnect when the machine sleeps.",
       "default": true
     },
     "PowerOffOnDisconnect": {
       "type": "boolean",
       "label": "Power off on intentional disconnect",
-      "description": "Requires the firmware power commands above. Sends shutdown before a healthy scale disconnects, including machine sleep, manual disconnect and switching scales. Plugin reload/unload and connection failures skip shutdown.",
+      "description": "Requires Shutdown only or Shutdown and keep-awake compatibility. Sends shutdown before a healthy scale disconnects, including machine sleep, manual disconnect and switching scales. Unload/reload and failures skip shutdown. Ultra shutdown is unavailable while charging.",
       "default": true
     },
     "PacketTimeoutMs": {

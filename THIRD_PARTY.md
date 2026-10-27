@@ -19,3 +19,9 @@ Protocol facts were checked against BooKoo's public Mini and Ultra protocol
 documents, available under the MIT license in
 [BooKooCode/OpenSource](https://github.com/BooKooCode/OpenSource).
 No BooKoo SDK implementation code is included.
+
+Version 0.2.0 also targets the published Themis Ultra protocol, including its
+weight-in-grams rule, non-weight packet types and separate shutdown/keep-awake
+firmware thresholds. The Mini and Ultra protocol documents were inspected on
+October 27, 2026. No additional SDK code is included; the existing GPL attribution
+and the unmodified Decaid bridge test fixture remain applicable.

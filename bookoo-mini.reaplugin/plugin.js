@@ -73,9 +73,9 @@ function createPlugin(host) {
   }
 
   function keepAwake(state) {
-    if (state.stopped || !settings.Firmware142Commands || !settings.KeepAwake) return;
+    if (state.stopped || settings.PowerCommandSupport !== "Shutdown and keep-awake" || !settings.KeepAwake) return;
     command(state, 0x25).catch(error => {
-      if (!state.stopped) host.log("[bookoo-mini] Keep-awake failed: " + error.message);
+      if (!state.stopped) host.log("[bookoo-scales] Keep-awake failed: " + error.message);
     }).then(() => {
       if (!state.stopped) {
         state.keepAwakeTimer = setTimeout(() => keepAwake(state), 60000);
@@ -92,6 +92,13 @@ function createPlugin(host) {
       if (typeof value !== "boolean") throw new Error(key + " must be a boolean");
       result[key] = value;
     }
+    const support = values.PowerCommandSupport == null ? "Legacy Mini setting" : values.PowerCommandSupport;
+    if (!["Legacy Mini setting", "Disabled", "Shutdown only", "Shutdown and keep-awake"].includes(support)) {
+      throw new Error("PowerCommandSupport must be a supported compatibility option");
+    }
+    result.PowerCommandSupport = support === "Legacy Mini setting"
+      ? (result.Firmware142Commands ? "Shutdown and keep-awake" : "Disabled")
+      : support;
     const timeout = values.PacketTimeoutMs == null ? 2000 : values.PacketTimeoutMs;
     if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 30000) {
       throw new Error("PacketTimeoutMs must be an integer between 1000 and 30000");
@@ -102,7 +109,7 @@ function createPlugin(host) {
 
   return {
     id: "bookoo-mini.reaplugin",
-    version: "0.1.0",
+    version: "0.2.0",
     onLoad(values) {
       settings = readSettings(values || {});
       unloaded = false;
@@ -134,7 +141,7 @@ function createPlugin(host) {
                 state.watchdog = setTimeout(() => {
                   const error = new Error("BooKoo protocol silence");
                   stop(state, error);
-                  host.log("[bookoo-mini] " + error.message);
+                  host.log("[bookoo-scales] " + error.message);
                   session.reportDisconnected().catch(() => {});
                 }, settings.PacketTimeoutMs);
               }
@@ -169,7 +176,7 @@ function createPlugin(host) {
               if (!state || state.cleanupStarted) return;
               state.cleanupStarted = true;
               const powerOff = !unloaded && !state.stopped && state.ready &&
-                settings.Firmware142Commands && settings.PowerOffOnDisconnect;
+                settings.PowerCommandSupport !== "Disabled" && settings.PowerOffOnDisconnect;
               stop(state);
               await state.commands;
               if (powerOff) await write(context.gatt, 0x15);

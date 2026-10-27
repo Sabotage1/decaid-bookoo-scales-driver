@@ -1,9 +1,17 @@
 {
-  "name": "decaid-bookoo-mini-driver",
-  "version": "0.1.0",
+  "name": "decaid-bookoo-scales-driver",
+  "version": "0.2.0",
   "private": true,
-  "description": "BooKoo Themis Mini BLE scale driver for Decaid 0.9.0",
+  "description": "BooKoo Themis Mini and Ultra BLE scale driver for Decaid 0.9.0",
   "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sabotage1/decaid-bookoo-scales-driver.git"
+  },
+  "homepage": "https://github.com/Sabotage1/decaid-bookoo-scales-driver#readme",
+  "bugs": {
+    "url": "https://github.com/Sabotage1/decaid-bookoo-scales-driver/issues"
+  },
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "check": "node --check bookoo-mini.reaplugin/plugin.js",

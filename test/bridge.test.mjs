@@ -140,3 +140,22 @@ test('real bridge keeps four physical instances independent and fences terminal 
   assert.equal(host.clock.timers.size, 0);
   assert.equal(live.slice(1).some(link => link.writes.some(write => write.data[2] === 21)), false);
 });
+
+test('real bridge: Ultra v4.0.0 compatibility shuts down without sending keep-awake', async () => {
+  const host = bridge({PowerCommandSupport: 'Shutdown only'});
+  const link = await host.create('ULTRA-TEST');
+  const ounceDisplay = packet(18.75); ounceDisplay[5] = 2;
+  ounceDisplay[19] = ounceDisplay.slice(0, 19).reduce((sum, byte) => sum ^ byte, 0);
+  await link.publish(ounceDisplay);
+  await link.connection;
+  assert.equal(link.publications[0].snapshot.weight, 18.75);
+  assert.equal(link.writes.length, 0);
+  await link.entry.handlers.tare();
+  await link.entry.handlers.startTimer();
+  await link.entry.handlers.stopTimer();
+  await link.entry.handlers.resetTimer();
+  assert.deepEqual(link.writes.map(write => write.data[2]), [1, 4, 5, 6]);
+  await host.disconnect(link);
+  assert.deepEqual(link.writes.at(-1), {cleanup: true, data: [3, 10, 21, 0, 0, 28]});
+  assert.equal(host.clock.timers.size, 0);
+});

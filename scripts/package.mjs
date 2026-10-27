@@ -12,7 +12,7 @@ for (const folder of ['bookoo-mini.reaplugin']) {
   if (manifest.id !== folder || !/^\d+\.\d+\.\d+$/.test(manifest.version)) {
     throw new Error('Plugin id or version is invalid');
   }
-  const name = `${folder.replace('.reaplugin', '')}-${manifest.version}.zip`;
+  const name = `bookoo-scales-${manifest.version}.zip`;
   const archive = path.join(output, name);
   const files = ['manifest.json', 'plugin.js', 'README.md', 'LICENSE', 'COPYING'];
   mkdirSync(output, {recursive: true});
