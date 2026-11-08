@@ -10,6 +10,31 @@ timer start/stop/reset. Existing skins use their standard scale integration.
 [SHA-256 checksums](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.3.0/SHA256SUMS)
 and [release notes](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/tag/v0.3.0).
 
+## Mini setup: firmware v1.4.2 is available and required for power features
+
+Public **Mini firmware v1.4.2 is now available**. Install v1.4.2 or a compatible
+later public release on the scale before using keep-alive or shutdown. Older Mini
+firmware does not support these commands; updating this plugin does not update
+the scale firmware.
+
+1. Update the plugin to **v0.3.0 or later** and load **BooKoo Scales Driver**.
+2. Open **Decaid → Plugins → BooKoo Scales Driver → three-dot menu → Settings**.
+3. Set **Scale model for power commands → Mini**.
+4. Set **Power command compatibility → Shutdown and keep-awake** and leave
+   **Keep scale awake while connected** and **Power off on intentional
+   disconnect** on. These are the new defaults, but saved explicit off choices
+   remain off until changed.
+5. Save and reconnect the scale if necessary. Select the plugin scale as primary
+   and preferred, with BOOKOO N and other Bluetooth clients disconnected.
+6. For shutdown when the machine sleeps, select Decaid's **Display Off** scale
+   power-management mode or the equivalent skin setting.
+
+On **November 8, 2026**, the maintainer reported that the updated driver was
+working on his Mini with firmware **v1.4.2**, including the keep-alive/shutdown
+checks discussed in the forum. It was installed through **GitHub Branch → main**
+on **Decaid 0.9.1**. This is a user-reported physical check, separate from the
+automated tests below.
+
 ## Mini v1.4.2 power fix and new defaults
 
 Earlier versions incorrectly sent the Ultra's power commands to the Mini. The
@@ -182,9 +207,12 @@ sessions and the unmodified Decaid v0.9.0 JavaScript BLE bridge with simulated
 Dart/GATT. The build checks syntax, archive entries and byte-for-byte agreement
 between source and `dist/bookoo-scales-0.3.0.zip`, and writes `dist/SHA256SUMS`.
 
-**Physical validation:** the v0.3.0 power fix has not yet been verified on physical
-Mini v1.4.2 or Ultra hardware. Prior v0.1.0 evidence was limited to 178 empty-scale
-Mini v1.4.1 samples in 18 seconds on Android, with battery reporting. Before
+**Physical validation:** on November 8, 2026, the maintainer reported that the
+updated driver worked with Mini firmware v1.4.2 after checking the power behavior
+on Decaid 0.9.1. This does not establish loaded-weight accuracy, brew-stop
+performance or long-session reliability across all tablets. Prior v0.1.0 evidence
+was limited to 178 empty-scale Mini v1.4.1 samples in 18 seconds on Android, with
+battery reporting. Before
 relying on the driver, check known and negative weights, tare/timers, a supervised
 brew-to-weight stop, long sessions, machine sleep and reconnect on the exact
 firmware and tablet/OS. A successful GATT write alone is not physical proof.

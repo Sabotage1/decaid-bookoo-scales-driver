@@ -4,6 +4,15 @@ Fixes Mini shutdown and keep-alive on **public firmware v1.4.2**, and enables bo
 features by default for Mini. Existing Mini and Ultra weight, battery, flow, tare
 and timer support continues through Decaid's standard Scale interface.
 
+**November 8 setup/validation update:** public Mini firmware **v1.4.2 is available
+and required** for the new Mini power features. After updating the scale firmware
+and plugin, open **Plugins → BooKoo Scales Driver → three-dot menu → Settings**,
+select **Scale model for power commands → Mini**, choose **Shutdown and
+keep-awake**, and leave both power toggles on. Save and reconnect if needed. For
+machine-sleep shutdown, also select Decaid's **Display Off** scale power policy.
+The maintainer has now reported this setup working on his physical Mini with
+firmware v1.4.2 and Decaid 0.9.1.
+
 ## What failed and what changed
 
 Previous releases incorrectly reused the Ultra's **0x15/0x25** power commands on
@@ -43,6 +52,12 @@ For tracked installation choose **Install plugin → GitHub Release** and enter
 `Sabotage1/decaid-bookoo-scales-driver`. Download the named installation asset,
 rather than GitHub's generated source archive.
 
+If the GitHub Release download fails with HTTP 504, use **GitHub Branch** with the
+same repository and branch **main**, or download the ZIP manually. Branch
+installation was verified on Decaid 0.9.1 after correcting the repository layout.
+It tracks future branch commits through Check for updates. ZIP installs are
+snapshots; installing through GitHub later enables tracked updates.
+
 ## Compatibility and behavior
 
 Power commands require **public Mini v1.4.2+**. On Mini v1.4.1 or earlier, beta
@@ -76,9 +91,11 @@ repeated keep-alive, legacy-setting upgrades, preserved opt-outs, readiness,
 serialized writes and the unmodified Decaid v0.9.0 JavaScript BLE bridge with
 simulated Dart/GATT. Packaging verifies archive contents against source.
 
-**Physical Mini v1.4.2 and Ultra acceptance remains pending.** The fix is verified
-against BooKoo's public protocol and automated tests, not an observed physical
-shutdown. Prior Mini evidence covered only a v0.1.0 empty-scale stream on v1.4.1.
+**Physical Mini check:** on November 8, 2026, the maintainer reported that the
+updated driver worked on his Mini with public firmware v1.4.2 after checking the
+power behavior on Decaid 0.9.1. This supplements the protocol/automated checks;
+accuracy, brew stopping and long-session reliability are not established by that
+report. Prior Mini evidence covered a v0.1.0 empty-scale stream on v1.4.1.
 
 See the [full guide](https://github.com/Sabotage1/decaid-bookoo-scales-driver#readme),
 [BooKoo Mini protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_mini_scale/protocols.md)
