@@ -47,6 +47,11 @@ Alternatively choose **Install plugin → GitHub Release** and enter
 `Sabotage1/decaid-bookoo-scales-driver`. **Check for updates** checks tracked
 GitHub installations. ZIP and folder installs are snapshots and need manual updates.
 
+If GitHub release downloads fail with HTTP 504, choose **GitHub Branch**, enter
+`Sabotage1/decaid-bookoo-scales-driver`, and use branch `main`. This tracks branch
+commits. Root-level `manifest.json` and `plugin.js` support Decaid 0.9.1's archive
+layout; the build synchronizes them from the packaged plugin folder.
+
 The installed plugin ID/folder remains `bookoo-mini.reaplugin` and its driver ID
 remains `bookoo`, preserving existing settings and plugin-backed preferred-scale
 IDs on update. Install as an update, rather than as a second renamed copy. The

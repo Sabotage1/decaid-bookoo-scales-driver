@@ -7,6 +7,11 @@ import path from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const output = path.join(root, 'dist');
 const checksums = [];
+// GitHub branch archives have one repository wrapper. Decaid 0.9.1 needs
+// manifest.json and plugin.js directly inside it, rather than two levels down.
+for (const file of ['manifest.json', 'plugin.js']) {
+  writeFileSync(path.join(root, file), readFileSync(path.join(root, 'bookoo-mini.reaplugin', file)));
+}
 for (const folder of ['bookoo-mini.reaplugin']) {
   const manifest = JSON.parse(readFileSync(path.join(root, folder, 'manifest.json'), 'utf8'));
   if (manifest.id !== folder || !/^\d+\.\d+\.\d+$/.test(manifest.version)) {
