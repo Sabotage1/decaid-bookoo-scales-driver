@@ -13,6 +13,14 @@ machine-sleep shutdown, also select Decaid's **Display Off** scale power policy.
 The maintainer has now reported this setup working on his physical Mini with
 firmware v1.4.2 and Decaid 0.9.1.
 
+**Where to select the model (Decaid 0.9.1 on macOS):**
+
+![Select Mini in the scale model dropdown](https://raw.githubusercontent.com/Sabotage1/decaid-bookoo-scales-driver/main/docs/images/select-mini-model.png)
+
+**Mini setup with both power features enabled:**
+
+![Mini selected with keep-alive and shutdown enabled](https://raw.githubusercontent.com/Sabotage1/decaid-bookoo-scales-driver/main/docs/images/mini-power-settings.png)
+
 ## What failed and what changed
 
 Previous releases incorrectly reused the Ultra's **0x15/0x25** power commands on

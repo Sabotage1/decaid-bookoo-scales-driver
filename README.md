@@ -29,6 +29,17 @@ the scale firmware.
 6. For shutdown when the machine sleeps, select Decaid's **Display Off** scale
    power-management mode or the equivalent skin setting.
 
+Open **Scale model for power commands** and choose **Mini** for Themis Mini, or
+**Ultra** for Themis Ultra, then save. These screenshots show the real settings
+screen in Decaid 0.9.1 on macOS with driver v0.3.0:
+
+![Select Mini in the scale model dropdown](docs/images/select-mini-model.png)
+
+For Mini public firmware v1.4.2+, the completed setup has **Mini**, **Shutdown and
+keep-awake**, and both power toggles enabled:
+
+![Mini selected with keep-alive and shutdown enabled](docs/images/mini-power-settings.png)
+
 On **November 8, 2026**, the maintainer reported that the updated driver was
 working on his Mini with firmware **v1.4.2**, including the keep-alive/shutdown
 checks discussed in the forum. It was installed through **GitHub Branch → main**
