@@ -1,207 +1,195 @@
 # BooKoo Scales Driver
 
-Community Bluetooth scale driver for **BooKoo Themis Mini and Themis Ultra**, using
-Decaid 0.9.0's JavaScript device-driver runtime. Publishes weight, battery, flow and
-timer readings through Decaid's normal Scale interface, with tare and timer
-start/stop/reset commands. Existing skins can use their standard scale integration.
+Community Bluetooth driver for **BooKoo Themis Mini and Themis Ultra**, using
+Decaid 0.9.0's JavaScript device-driver runtime. It publishes weight, battery,
+flow and timer readings through Decaid's normal Scale interface, with tare and
+timer start/stop/reset. Existing skins use their standard scale integration.
 
-**Current release: v0.2.0.** Download the
-[installation ZIP](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.2.0/bookoo-scales-0.2.0.zip),
-[SHA-256 checksums](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.2.0/SHA256SUMS)
-and [release notes](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/tag/v0.2.0).
-The repository is now **Sabotage1/decaid-bookoo-scales-driver**, previously
-`Sabotage1/decaid-bookoo-mini-driver`. The installed plugin keeps its original ID
-so existing Mini users can update in place.
+**Current release: v0.3.0.** Download the
+[installation ZIP](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.3.0/bookoo-scales-0.3.0.zip),
+[SHA-256 checksums](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.3.0/SHA256SUMS)
+and [release notes](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/tag/v0.3.0).
 
-## Models, firmware and power commands
+## Mini v1.4.2 power fix and new defaults
 
-Mini and Ultra use the same BLE service and standard weight frame. Their names
-and UUIDs do not reliably identify model or firmware. The driver does not guess a
-firmware version from a successful connection or an acknowledged write.
+Earlier versions incorrectly sent the Ultra's power commands to the Mini. The
+public Mini v1.4.2 protocol, updated by BooKoo on October 30, 2026, specifies
+**shutdown 0x11** and **keep-alive 0x12**. Ultra uses **0x15** and **0x25**.
+v0.3.0 selects the command set using **Scale model for power commands**.
 
-| Scale / firmware | Standard weights and controls | Power command compatibility |
-| --- | --- | --- |
-| Mini v1.4.1 or unknown Mini firmware | Implemented | Disabled |
-| Mini v1.4.2+ | Implemented | Shutdown and keep-awake; based on manufacturer confirmation reported in issue #1015, pending hardware verification |
-| Ultra v3.1.2 and earlier, or unknown Ultra firmware | Shared published protocol implemented | Disabled |
-| Ultra release v4.0.0 | Implemented | Shutdown only |
-| Ultra release v4.0.1+ | Implemented | Shutdown and keep-awake |
+**Mini is the default model. Keep-alive and shutdown are ON by default**, targeting
+public Mini firmware v1.4.2 or later. The former `Firmware142Commands` checkbox is
+removed and no longer gates these features. An old saved `false` or `Legacy Mini
+setting` does not keep them disabled after updating. Explicit **Disabled** choices
+and saved off toggles are preserved; enable them in Settings if needed.
 
-Set **Power command compatibility** only after checking the scale's firmware.
-The selector is a manual compatibility declaration, not automatic firmware
-validation. Default settings send neither power command.
-
-Ultra restrictions from the manufacturer apply: tare is unavailable during
-automatic running/done or while charging; timer commands are effective in timing
-and ratio modes; shutdown is unavailable while charging. A GATT acknowledgement
-alone does not prove the scale performed an action. Choose an appropriate manual
-mode for Decaid's tare/timer workflow. The driver does not change device modes,
-calibration, presets, automatic stop conditions or powder weight.
+**Ultra users upgrading from any earlier version must select Ultra in the new
+model setting before using power commands.** The model is not detected from the
+shared Bluetooth name or UUIDs. On older or unsupported firmware, select Disabled.
 
 ## Install or update
 
-1. Download the **bookoo-scales-0.2.0.zip** release asset linked above and transfer
-   it to the device running Decaid 0.9.0. Use this asset, rather than GitHub's
-   generated source-code archive.
-2. Open **Plugins → cogwheel → Install plugin → ZIP file** and select that ZIP.
-   Alternatively install the `bookoo-mini.reaplugin` folder as a **Folder snapshot**.
-3. Load/enable **BooKoo Scales Driver**. On a first install, disconnect the native
-   BooKoo session, turn on the scale, disconnect BOOKOO N or other BLE clients,
-   rescan and select the plugin scale as **primary** and **preferred**.
-4. Leave power commands disabled for old or unknown firmware. For supported
-   firmware, select the compatibility option in the table above. Saving settings
-   reloads the plugin; reconnect if necessary.
-5. For machine sleep, use Decaid's **Display Off** scale power-management mode.
-   Without a supported shutdown command, this deliberately disconnects Bluetooth
-   and leaves the scale to its own auto-off timer.
-6. Check a known weight, tare and timer controls in the skin before brewing.
+1. Transfer **bookoo-scales-0.3.0.zip** to the device running Decaid 0.9.0. Choose
+   the named release asset rather than GitHub's generated source-code archive.
+2. Open **Plugins → cogwheel → Install plugin → ZIP file**, select the ZIP, and
+   load/enable **BooKoo Scales Driver**. A folder snapshot also works.
+3. For Mini public v1.4.2+, the default power settings are ready. For Ultra, open
+   Settings and select **Scale model for power commands → Ultra**, then choose
+   the compatibility option below. Save and reconnect if needed.
+4. On first installation, disconnect any native BooKoo session and BOOKOO N or
+   other BLE clients. Turn on the scale, rescan and select the plugin scale as
+   **primary** and **preferred**.
+5. For shutdown when the espresso machine sleeps, set Decaid's scale power
+   management to **Display Off**, or use the equivalent skin setting.
+6. Check a known weight, tare and timer controls before brewing.
 
-For existing installations, the visible name and ZIP filename change while the
-plugin ID remains
-`bookoo-mini.reaplugin`, its driver ID remains `bookoo`, and the folder deliberately
-retains its old name. Updating an installed v0.1.0 plugin therefore preserves its
-saved settings and plugin-backed preferred-scale ID. Do not install a second,
-renamed copy beside the old driver. The filename is not the plugin's identity.
+Alternatively choose **Install plugin → GitHub Release** and enter
+`Sabotage1/decaid-bookoo-scales-driver`. **Check for updates** checks tracked
+GitHub installations. ZIP and folder installs are snapshots and need manual updates.
 
-Existing users who enabled `Firmware142Commands` retain their Mini behavior when
-compatibility is **Legacy Mini setting**. Explicit choices such as **Disabled** or
-**Shutdown only** override the old checkbox. Keep the legacy Mini checkbox off
-when configuring an Ultra; use the compatibility selector instead.
+The installed plugin ID/folder remains `bookoo-mini.reaplugin` and its driver ID
+remains `bookoo`, preserving existing settings and plugin-backed preferred-scale
+IDs on update. Install as an update, rather than as a second renamed copy. The
+former `Sabotage1/decaid-bookoo-mini-driver` repository links redirect here.
 
-### Install with tracked GitHub updates
+## Firmware and model settings
 
-As an alternative to the ZIP, choose **Plugins → cogwheel → Install plugin →
-GitHub Release** and enter `Sabotage1/decaid-bookoo-scales-driver`. Decaid installs
-the release ZIP and tracks future release tags. Use **Check for updates** to check
-a tracked install. ZIP and folder installs are snapshots and need manual updates.
+| Device / firmware | Scale model | Power command compatibility |
+| --- | --- | --- |
+| Mini public v1.4.2+ | Mini (default) | Shutdown and keep-awake (default) |
+| Mini v1.4.1 or earlier; beta v1.5.0.0806; unconfirmed firmware | Mini | Disabled |
+| Ultra release v4.0.1+ | Ultra | Shutdown and keep-awake |
+| Ultra release v4.0.0 | Ultra | Shutdown only |
+| Ultra v3.1.2 or earlier; unconfirmed firmware | Ultra | Disabled |
 
-### Enable Ultra keep-alive and shutdown
+Firmware compatibility is a manual setting. Neither a successful connection nor
+an acknowledged write detects firmware or proves the scale performed an action.
+These settings apply to every active scale connected by this plugin. **For mixed
+Mini/Ultra connections, disable power commands:** a shared model setting cannot
+select a different command set per device.
 
-For an Ultra on confirmed release firmware **v4.0.1 or later**, open the driver's
-**Settings** and select:
+For the default Mini setup, leave these enabled:
 
-- **Power command compatibility:** `Shutdown and keep-awake`.
+- **Power command compatibility:** Shutdown and keep-awake.
 - **Keep scale awake while connected:** on.
 - **Power off on intentional disconnect:** on.
 
-Save, then reconnect if needed. For machine sleep, also select Decaid's
-**Display Off** scale power-management mode. The legacy Mini firmware checkbox is
-not used with this explicit compatibility choice. Older or unknown firmware
-should use the option in the compatibility table above.
-
 ## Power behavior
 
-With **Shutdown and keep-awake** compatibility and **Keep scale awake while
-connected** enabled, the driver sends `03 0A 25 00 00 2C` after the first accepted
-weight and every 60 seconds after the previous attempt settles. This resets the
-auto-off countdown without changing the saved auto-off duration. **Shutdown only**
-never sends this command, including on Ultra v4.0.0.
+| Model | Keep-alive frame | Shutdown frame |
+| --- | --- | --- |
+| Mini public v1.4.2+ | `03 0A 12 00 00 1B` | `03 0A 11 00 00 18` |
+| Ultra (compatible firmware above) | `03 0A 25 00 00 2C` | `03 0A 15 00 00 1C` |
 
-With a compatible selection and **Power off on intentional disconnect** enabled,
-the driver sends `03 0A 15 00 00 1C` through the host's cleanup GATT context before
-Bluetooth teardown. Decaid 0.9.0 does not provide the disconnect reason to this
-hook, so this also covers manual disconnect and switching scales. Plugin unload/
-reload, link loss, failed initialization and protocol silence skip shutdown.
-A powered-off scale may need its physical button before it can reconnect.
+Keep-alive starts after the first accepted weight and repeats every **60 seconds**
+after the previous attempt settles. It resets the auto-off countdown without
+changing the saved auto-off duration. Writes are serialized and do not overlap.
+The Shutdown only option never sends keep-alive. Either power toggle can be
+turned off independently.
 
-Keep-awake ends when the connection retires. With Decaid scale power management
-disabled, it continues while the scale remains connected, including machine sleep.
-The driver does not wake a powered-off scale or update its firmware.
+Shutdown is sent through the host's cleanup GATT context before Bluetooth
+teardown on a healthy intentional disconnect. Decaid 0.9.0 does not provide the
+disconnect reason, so this also applies to manual disconnect and switching scales.
+Plugin unload/reload, link loss, failed initialization and protocol silence skip
+shutdown. A powered-off scale may need its physical button before reconnecting.
 
-**Settings are shared by all physical scales connected by this plugin.** If you
-connect mixed models/firmware, choose only capabilities supported by every active
-scale, or leave power support Disabled. Per-scale firmware profiles are not exposed.
+Keep-alive stops when the connection retires. If Decaid scale power management is
+disabled, the connection and keep-alive may continue during machine sleep. Plugin
+power settings alone do not change Decaid's machine-sleep policy. Use Display Off
+for a deliberate sleep disconnect without an immediate recovery attempt. The
+driver does not remotely wake the scale or update its firmware.
+
+Mini tare/timer actions depend on its mode and timer state. Ultra shutdown is
+unavailable while charging; Ultra tare is unavailable while charging or during
+automatic running/done, and timer commands require timing or ratio mode. Choose
+an appropriate manual mode for Decaid's controls. The driver does not change
+modes, calibration, presets, automatic stop conditions or powder weight.
 
 ## Settings
 
 | Setting | Default | Effect |
 | --- | --- | --- |
-| `PowerCommandSupport` | `Legacy Mini setting` | Options: Legacy Mini setting, Disabled, Shutdown only, Shutdown and keep-awake. |
-| `Firmware142Commands` | `false` | Backward-compatible Mini setting; only used in Legacy Mini setting mode. |
-| `KeepAwake` | `true` | Countdown reset, only when compatibility permits both commands. |
-| `PowerOffOnDisconnect` | `true` | Shutdown, only when compatibility permits shutdown. |
-| `PacketTimeoutMs` | `2000` | Valid weight silence deadline, integer 1000–30000 ms. |
+| `ScaleModel` | `Mini` | Selects Mini 0x11/0x12 or Ultra 0x15/0x25 power commands. |
+| `PowerCommandSupport` | `Shutdown and keep-awake` | Both commands, shutdown only, or Disabled. |
+| `KeepAwake` | `true` | Enables countdown reset when compatibility permits it. |
+| `PowerOffOnDisconnect` | `true` | Enables shutdown when compatibility permits it. |
+| `PacketTimeoutMs` | `2000` | Valid weight silence deadline; integer 1000–30000 ms. |
 
-The silence watchdog starts after subscription setup, or at an earlier valid
-weight notification. Invalid frames and Ultra powder/settlement events do not
-refresh it. A timeout reports failure once; Decaid owns recovery. The default is
-inherited from the reference Mini driver and needs confirmation on real Ultra
-hardware. Do not increase it to conceal an unreliable weight stream.
+The old `Firmware142Commands` value is ignored. The plugin also accepts the old
+Legacy Mini setting string as an alias for both commands when an older host
+passes it; Decaid 0.9.0 reconciles that retired enum value to the new default.
+Explicit Disabled values and false power toggles survive an update.
 
-## Connection troubleshooting
+## Connection and power troubleshooting
 
-Loading a driver does not select a scale. A native preference containing only a
-Bluetooth address will not automatically migrate to a plugin ID. Select the
-plugin entry and save it as preferred. IDs start with
-`plugin:bookoo-mini.reaplugin:bookoo:` for both models. A remembered native entry
-may remain disconnected while the plugin scale is connected; this is expected.
+Loading the plugin does not select a scale. A native preference containing only
+a Bluetooth address does not automatically migrate to a plugin ID. Select the
+plugin entry and save it as preferred. Its ID starts with
+`plugin:bookoo-mini.reaplugin:bookoo:`. A remembered native entry can remain
+disconnected while the plugin scale is connected.
 
-Keep the scale on and other BLE clients disconnected. Power-cycle and rescan if
-needed. `GET /api/v1/devices` on your own Decaid host should show the plugin scale
-as `connected` and `primary`. `/ws/v1/scale/snapshot` should deliver live weights.
-The driver does not create its own scan/reconnect loop or direct machine controls.
+Check that v0.3.0 is installed, the model matches the physical scale, and power
+compatibility and both toggles are enabled. On load, the log identifies the
+selected model and effective settings, for example:
 
-## Protocol
+```text
+[bookoo-scales] Power protocol: Mini; keep-alive on; shutdown on
+```
 
-- Service `00000ffe-0000-1000-8000-00805f9b34fb`; notifications
-  `0000ff11-0000-1000-8000-00805f9b34fb`; acknowledged commands
+If an explicit Disabled selection or off toggle was saved earlier, turn it on.
+For sleep shutdown, check Decaid's Display Off policy. Unloading the plugin is
+not a shutdown test. For Ultra, disconnect charging power before testing shutdown.
+Keep other Bluetooth apps disconnected; power-cycle and rescan if necessary.
+`GET /api/v1/devices` should show the plugin scale connected and primary, and
+`/ws/v1/scale/snapshot` should deliver current weights.
+
+The weight-stream watchdog starts after subscription setup or an earlier valid
+notification. Invalid frames and Ultra powder/settlement frames do not extend it.
+A timeout reports failure once and lets Decaid recover. The default 2-second
+cadence still needs physical Ultra confirmation; do not increase it to hide an
+unreliable stream.
+
+## Protocol and validation
+
+- Service `00000ffe-0000-1000-8000-00805f9b34fb`, notifications
+  `0000ff11-0000-1000-8000-00805f9b34fb`, acknowledged commands
   `0000ff12-0000-1000-8000-00805f9b34fb`.
-- Standard weights: exactly 20 bytes, header `03 0B`, XOR checksum, signed grams
-  at 0.01 g resolution, 24-bit millisecond timer and signed flow at 0.01 g/s.
-- Ultra's ounce display flag does not change BLE weight units: published weight
-  remains grams. No ounces-to-grams conversion is applied to an already-gram value.
-- Ultra `03 0F` powder frames and `03 0D` automatic settlement frames are ignored.
-  They never become live beverage weights, timer/flow updates, readiness evidence
-  or liveness evidence. This version does not expose those extra channels.
+- Weight frames are 20 bytes with header `03 0B` and XOR checksum; signed grams
+  and flow have 0.01 resolution, with a 24-bit millisecond timer.
+- Ultra ounce display selections do not change BLE weight units. Powder `03 0F`
+  and automatic settlement `03 0D` frames are ignored, not used as beverage samples
+  or stream-liveness evidence.
 - Invalid battery values retain the last valid value, initially unknown. Invalid
   flow signs omit flow without discarding the weight.
-- Tare `01`, timer start `04`, stop `05`, reset `06`: six-byte XOR commands.
-- Each publication retains the host's opaque sample token. No JS timestamp or
-  stale-sample fallback is invented. Regular writes are serialized per session;
-  keep-awake is single-flight. User command errors propagate; maintenance failures
-  are logged before a later periodic attempt.
+- Tare `01`, timer start `04`, stop `05`, reset `06` use six-byte XOR commands.
+- Publications retain the host's opaque sample token rather than inventing JS
+  timestamps or disguising delayed samples. Decaid owns reconnect behavior.
 
-## Build and validation
-
-Node.js 20+ and system zip/unzip; no npm dependencies:
+Node.js 20+ and system zip/unzip are needed to build; there are no npm dependencies:
 
 ```sh
-npm test
 npm run build
 ```
 
-Build outputs `dist/bookoo-scales-0.2.0.zip` and `dist/SHA256SUMS`. The ZIP has one
-plugin root, with its manifest, source, README and license. Build verifies archive
-entries and their bytes against source.
+All **49 automated tests** pass, including exact Mini and Ultra command frames,
+periodic keep-alive, old-settings migration, preserved opt-outs, independent
+sessions and the unmodified Decaid v0.9.0 JavaScript BLE bridge with simulated
+Dart/GATT. The build checks syntax, archive entries and byte-for-byte agreement
+between source and `dist/bookoo-scales-0.3.0.zip`, and writes `dist/SHA256SUMS`.
 
-All **38 automated tests** pass for this release. They cover both model frame contracts, grams despite Ultra ounce
-selection, ignored non-weight frames, firmware power profiles, migration of Mini
-settings, exact commands, timeouts, stale callbacks and independent sessions.
-Integration tests use Decaid v0.9.0's unmodified JavaScript BLE bridge with a
-simulated Dart/GATT boundary. They do not execute the Flutter host or physical BLE.
-
-**Hardware evidence:** the previous v0.1.0 Mini driver connected on Mini v1.4.1
-with Decaid 0.9.0 on Android, receiving 178 empty-scale weight samples in 18 seconds
-with battery reporting and no disconnect during that capture. That was not an
-accuracy or brewing acceptance test. **The v0.2.0 build, Ultra hardware and new
-power commands have not been physically verified.**
-
-Before relying on either model, compare empty, known and negative weights; tare;
-all timer controls; timely updates during a supervised brew-to-weight stop; and
-long-session behavior, sleep, power-cycle, reconnect, app restart and tablet
-background/foreground operation. For Ultra, compare grams and ounce display modes,
-manual timing/ratio modes, automatic-mode traffic, supported power commands on the
-exact firmware, and behavior while charging. Record model, firmware, Decaid/OS
-versions, notification cadence and observed results. A Bluetooth acknowledgement
-is not proof of physical shutdown.
+**Physical validation:** the v0.3.0 power fix has not yet been verified on physical
+Mini v1.4.2 or Ultra hardware. Prior v0.1.0 evidence was limited to 178 empty-scale
+Mini v1.4.1 samples in 18 seconds on Android, with battery reporting. Before
+relying on the driver, check known and negative weights, tare/timers, a supervised
+brew-to-weight stop, long sessions, machine sleep and reconnect on the exact
+firmware and tablet/OS. A successful GATT write alone is not physical proof.
 
 ## Sources and license
 
-- [BooKoo Ultra protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_ultra_scale/protocols.md), inspected October 27, 2026; document dated September 18, 2026.
-- [BooKoo Mini protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_mini_scale/protocols.md).
-- [Mini v1.4.2 manufacturer confirmation and plugin approach, Decaid #1015](https://github.com/decentespresso/decaid/issues/1015#issuecomment-6318884349).
+- [BooKoo Mini protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_mini_scale/protocols.md), document updated October 30, 2026; checked November 8, 2026. This is the source of the corrected public Mini power commands.
+- [BooKoo Ultra protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_ultra_scale/protocols.md), checked November 8, 2026.
+- [Original discussion, Decaid #1015](https://github.com/decentespresso/decaid/issues/1015). Its early Ultra-style Mini opcodes are superseded by the released Mini protocol above.
 - [Decaid v0.9.0 reference plugin](https://github.com/decentespresso/decaid/tree/v0.9.0/examples/plugins/bookoo-mini.reaplugin).
 - [Decaid v0.9.0 plugin contract](https://github.com/decentespresso/decaid/blob/v0.9.0/doc/Plugins.md).
 
-Community plugin, not an official Decent Espresso or BooKoo release.
-GPL-3.0-or-later; see LICENSE, COPYING and THIRD_PARTY.md.
+Community plugin, GPL-3.0-or-later; see LICENSE, COPYING and THIRD_PARTY.md.

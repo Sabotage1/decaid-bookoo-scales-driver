@@ -7,6 +7,11 @@ function createPlugin(host) {
   const service = "00000ffe-0000-1000-8000-00805f9b34fb";
   const dataCharacteristic = "0000ff11-0000-1000-8000-00805f9b34fb";
   const commandCharacteristic = "0000ff12-0000-1000-8000-00805f9b34fb";
+  // Mini public v1.4.2 uses 11/12, not the Ultra's 15/25 (hexadecimal).
+  const powerCommands = {
+    Mini: {shutdown: 0x11, keepAwake: 0x12},
+    Ultra: {shutdown: 0x15, keepAwake: 0x25}
+  };
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   const sessions = new Set();
   let settings;
@@ -74,7 +79,7 @@ function createPlugin(host) {
 
   function keepAwake(state) {
     if (state.stopped || settings.PowerCommandSupport !== "Shutdown and keep-awake" || !settings.KeepAwake) return;
-    command(state, 0x25).catch(error => {
+    command(state, powerCommands[settings.ScaleModel].keepAwake).catch(error => {
       if (!state.stopped) host.log("[bookoo-scales] Keep-awake failed: " + error.message);
     }).then(() => {
       if (!state.stopped) {
@@ -86,19 +91,23 @@ function createPlugin(host) {
   function readSettings(values) {
     const result = {};
     for (const [key, fallback] of [
-      ["Firmware142Commands", false], ["KeepAwake", true], ["PowerOffOnDisconnect", true]
+      ["KeepAwake", true], ["PowerOffOnDisconnect", true]
     ]) {
       const value = values[key] == null ? fallback : values[key];
       if (typeof value !== "boolean") throw new Error(key + " must be a boolean");
       result[key] = value;
     }
-    const support = values.PowerCommandSupport == null ? "Legacy Mini setting" : values.PowerCommandSupport;
+    result.ScaleModel = values.ScaleModel == null ? "Mini" : values.ScaleModel;
+    if (result.ScaleModel !== "Mini" && result.ScaleModel !== "Ultra") {
+      throw new Error("ScaleModel must be Mini or Ultra");
+    }
+    const support = values.PowerCommandSupport == null ? "Shutdown and keep-awake" : values.PowerCommandSupport;
     if (!["Legacy Mini setting", "Disabled", "Shutdown only", "Shutdown and keep-awake"].includes(support)) {
       throw new Error("PowerCommandSupport must be a supported compatibility option");
     }
-    result.PowerCommandSupport = support === "Legacy Mini setting"
-      ? (result.Firmware142Commands ? "Shutdown and keep-awake" : "Disabled")
-      : support;
+    // Upgrade the former disabled-by-default Mini gate. Preserve explicit opt-outs.
+    // Firmware142Commands is obsolete; even a saved false must not gate v1.4.2.
+    result.PowerCommandSupport = support === "Legacy Mini setting" ? "Shutdown and keep-awake" : support;
     const timeout = values.PacketTimeoutMs == null ? 2000 : values.PacketTimeoutMs;
     if (!Number.isInteger(timeout) || timeout < 1000 || timeout > 30000) {
       throw new Error("PacketTimeoutMs must be an integer between 1000 and 30000");
@@ -109,10 +118,13 @@ function createPlugin(host) {
 
   return {
     id: "bookoo-mini.reaplugin",
-    version: "0.2.0",
+    version: "0.3.0",
     onLoad(values) {
       settings = readSettings(values || {});
       unloaded = false;
+      host.log("[bookoo-scales] Power protocol: " + settings.ScaleModel +
+        "; keep-alive " + (settings.PowerCommandSupport === "Shutdown and keep-awake" && settings.KeepAwake ? "on" : "off") +
+        "; shutdown " + (settings.PowerCommandSupport !== "Disabled" && settings.PowerOffOnDisconnect ? "on" : "off"));
       return host.devices.bindDriver("bookoo", {
         create() {
           let active;
@@ -179,7 +191,7 @@ function createPlugin(host) {
                 settings.PowerCommandSupport !== "Disabled" && settings.PowerOffOnDisconnect;
               stop(state);
               await state.commands;
-              if (powerOff) await write(context.gatt, 0x15);
+              if (powerOff) await write(context.gatt, powerCommands[settings.ScaleModel].shutdown);
             },
             tare() {return command(active, 0x01);},
             startTimer() {return command(active, 0x04);},

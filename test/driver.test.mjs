@@ -4,12 +4,16 @@ import test from 'node:test';
 import {load, connected, session, packet, checksum, encode, deferred, flush,
   streamFor, SERVICE, COMMAND} from './harness.mjs';
 
-test('manifest provides a BLE scale with firmware power commands off by default', () => {
+test('manifest provides a BLE scale with Mini power commands on by default', () => {
   const manifest = JSON.parse(readFileSync(new URL('../bookoo-mini.reaplugin/manifest.json', import.meta.url)));
   assert.equal(manifest.id, 'bookoo-mini.reaplugin');
   assert.equal(manifest.apiVersion, 1);
   assert.deepEqual(manifest.permissions, ['transport.ble', 'log']);
-  assert.equal(manifest.settings.Firmware142Commands.default, false);
+  assert.equal(manifest.settings.ScaleModel.default, 'Mini');
+  assert.equal(manifest.settings.PowerCommandSupport.default, 'Shutdown and keep-awake');
+  assert.equal(manifest.settings.KeepAwake.default, true);
+  assert.equal(manifest.settings.PowerOffOnDisconnect.default, true);
+  assert.equal('Firmware142Commands' in manifest.settings, false);
   assert.equal(manifest.drivers[0].type, 'scale');
   assert.ok(manifest.drivers[0].capabilities.includes('disconnectToSleep'));
   for (const setting of Object.values(manifest.settings)) {
@@ -72,7 +76,7 @@ test('invalid flow sign omits flow without discarding a valid weight', async () 
 });
 
 test('tare and timer writes use full UUIDs, six-byte XOR frames and acknowledged writes', async () => {
-  const harness = load();
+  const harness = load({PowerCommandSupport: 'Disabled'});
   const {driver, link} = await connected(harness);
   await driver.tare(); await driver.startTimer(); await driver.stopTimer(); await driver.resetTimer();
   assert.deepEqual(link.writes.map(entry => entry.data), [
@@ -86,8 +90,8 @@ test('tare and timer writes use full UUIDs, six-byte XOR frames and acknowledged
   assert.equal(link.cleanupWrites.length, 0);
 });
 
-test('firmware 1.4.1 receives no keep-awake or shutdown commands', async () => {
-  const harness = load();
+test('older Mini firmware can explicitly disable keep-awake and shutdown commands', async () => {
+  const harness = load({PowerCommandSupport: 'Disabled'});
   const {driver, link} = await connected(harness);
   await streamFor(harness, link, 180000);
   assert.equal(link.writes.length, 0);
@@ -95,15 +99,15 @@ test('firmware 1.4.1 receives no keep-awake or shutdown commands', async () => {
   assert.equal(link.cleanupWrites.length, 0);
 });
 
-test('firmware 1.4.2 opt-in sends keep-awake immediately and every 60 seconds', async () => {
-  const harness = load({Firmware142Commands: true});
+test('Mini v1.4.2 defaults send keep-awake immediately and every 60 seconds', async () => {
+  const harness = load();
   const {driver, link} = await connected(harness);
   await flush();
-  assert.deepEqual(link.writes.map(entry => entry.data), [[3, 10, 37, 0, 0, 44]]);
+  assert.deepEqual(link.writes.map(entry => entry.data), [[3, 10, 18, 0, 0, 27]]);
   await streamFor(harness, link, 120000);
   assert.equal(link.writes.length, 3);
   await driver.disconnect(link.cleanup());
-  assert.deepEqual(link.cleanupWrites.map(entry => entry.data), [[3, 10, 21, 0, 0, 28]]);
+  assert.deepEqual(link.cleanupWrites.map(entry => entry.data), [[3, 10, 17, 0, 0, 24]]);
   assert.equal(harness.clock.timers.size, 0);
 });
 
@@ -212,14 +216,14 @@ test('stale samples retain their provenance and cannot establish readiness', asy
 test('keep-awake is single-flight and serializes with user commands', async () => {
   const harness = load({Firmware142Commands: true});
   const gate = deferred();
-  const {driver, link} = await connected(harness, {write: entry => entry.data[2] === 37 ? gate.promise : undefined});
+  const {driver, link} = await connected(harness, {write: entry => entry.data[2] === 18 ? gate.promise : undefined});
   const tare = driver.tare();
   await streamFor(harness, link, 120000);
   assert.equal(link.writes.length, 1);
   gate.resolve(); await tare; await flush();
-  assert.deepEqual(link.writes.map(entry => entry.data[2]), [37, 1]);
+  assert.deepEqual(link.writes.map(entry => entry.data[2]), [18, 1]);
   await streamFor(harness, link, 60000);
-  assert.equal(link.writes.filter(entry => entry.data[2] === 37).length, 2);
+  assert.equal(link.writes.filter(entry => entry.data[2] === 18).length, 2);
   await driver.disconnect(link.cleanup());
 });
 
@@ -232,13 +236,13 @@ test('keep-awake failure logs and retries without losing weight or user command 
   await assert.rejects(driver.tare(), /write failed/);
   await streamFor(harness, link, 60000);
   assert.ok(link.published.length > 1);
-  assert.equal(link.writes.filter(entry => entry.data[2] === 37).length, 2);
+  assert.equal(link.writes.filter(entry => entry.data[2] === 18).length, 2);
   await assert.rejects(driver.disconnect(link.cleanup()), /write failed/);
   assert.equal(harness.clock.timers.size, 0);
 });
 
 test('old callbacks and queued commands cannot affect a replacement session', async () => {
-  const harness = load();
+  const harness = load({PowerCommandSupport: 'Disabled'});
   const driver = harness.create();
   const old = session();
   const connecting = driver.connect(old);
@@ -270,7 +274,7 @@ test('four physical bindings are independent and plugin unload cancels all timer
 
 test('settings reject invalid types and timeout bounds before binding a driver', () => {
   for (const settings of [
-    {Firmware142Commands: 'true'}, {KeepAwake: 1}, {PowerOffOnDisconnect: 'false'},
+    {ScaleModel: 'mini'}, {ScaleModel: {}}, {KeepAwake: 1}, {PowerOffOnDisconnect: 'false'},
     {PacketTimeoutMs: 0}, {PacketTimeoutMs: 999}, {PacketTimeoutMs: 30001},
     {PacketTimeoutMs: 2000.5}, {PacketTimeoutMs: '2000'}, {PacketTimeoutMs: Infinity}
   ]) assert.throws(() => load(settings));

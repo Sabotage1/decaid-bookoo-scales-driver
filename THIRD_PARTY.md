@@ -25,3 +25,12 @@ weight-in-grams rule, non-weight packet types and separate shutdown/keep-awake
 firmware thresholds. The Mini and Ultra protocol documents were inspected on
 October 27, 2026. No additional SDK code is included; the existing GPL attribution
 and the unmodified Decaid bridge test fixture remain applicable.
+
+Version 0.3.0 corrects Mini power commands using BooKoo's public Mini protocol
+updated October 30, 2026, checked November 8, 2026:
+[Mini protocol at commit 4211fe09](https://github.com/BooKooCode/OpenSource/blob/4211fe09d909de14d5ad4aea1fa26dec18cc3c80/bookoo_mini_scale/protocols.md).
+Mini public v1.4.2 uses shutdown `0x11` and keep-alive `0x12`; the earlier
+Ultra-style opcodes in Decaid issue #1015 are not the released Mini contract.
+Ultra retains shutdown `0x15` and keep-alive `0x25`; its protocol was rechecked on
+November 8, 2026. Only protocol facts and independent golden test frames are
+included; no additional SDK implementation code is incorporated.

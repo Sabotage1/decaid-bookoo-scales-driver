@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 — 2026-11-08
+
+- Fix Mini public firmware v1.4.2 power commands: shutdown is `0x11` and
+  keep-alive is `0x12`, according to BooKoo's October 30 public protocol.
+  Earlier releases incorrectly reused Ultra's `0x15` and `0x25` on Mini.
+- Add **Scale model for power commands**, default Mini. Select Ultra to retain
+  the Ultra command set. Every Ultra user upgrading must make that selection.
+- Enable shutdown and keep-alive by default. Retire the old firmware checkbox;
+  saved legacy false values no longer keep power features off after updating.
+  Preserve explicit Disabled selections and independently saved off toggles.
+- Log the selected model and effective power settings for diagnosis. Keep the
+  60-second single-flight schedule, health/readiness guards and cleanup authority.
+- Pass 49 automated tests, including golden protocol frames, legacy-setting
+  migration, preserved opt-outs and the real Decaid v0.9.0 JavaScript BLE bridge
+  with simulated Dart/GATT. Physical Mini v1.4.2 and Ultra acceptance is pending.
+- Publish `bookoo-scales-0.3.0.zip`, checksums and updated installation/model setup
+  instructions, keeping the plugin/driver IDs and existing permissions.
+
 ## 0.2.0 — 2026-10-27
 
 - Rename the visible plugin to **BooKoo Scales Driver** and add explicit Themis

@@ -92,15 +92,37 @@ function bridge(settings = {}) {
   return {clock, plugin, create, disconnect, calls, logs};
 }
 
-test('real Decaid v0.9.0 bridge carries samples, timer commands and deliberate cleanup', async () => {
-  const host = bridge({Firmware142Commands: true});
+test('real Decaid v0.9.0 bridge carries default Mini power commands, samples and deliberate cleanup', async () => {
+  const host = bridge();
   const link = await host.create('AA:BB:CC');
   await link.publish(packet(-10.5));
   await link.connection;
   await link.entry.handlers.resetTimer();
   assert.equal(link.publications[0].snapshot.weight, -10.5);
   assert.equal(link.publications[0].sample, 'host-sample-1');
-  assert.deepEqual(link.writes.map(write => write.data[2]), [37, 6]);
+  assert.deepEqual(link.writes.map(write => write.data[2]), [18, 6]);
+  await host.disconnect(link);
+  assert.deepEqual(link.writes.at(-1), {cleanup: true, data: [3, 10, 17, 0, 0, 24]});
+  assert.equal(host.clock.timers.size, 0);
+});
+
+test('real bridge: old disabled-by-default Mini settings upgrade to public v1.4.2 frames', async () => {
+  const host = bridge({PowerCommandSupport: 'Legacy Mini setting', Firmware142Commands: false});
+  const link = await host.create('MINI-1.4.2');
+  await link.publish(packet());
+  await link.connection;
+  assert.deepEqual(link.writes, [{cleanup: false, data: [3, 10, 18, 0, 0, 27]}]);
+  await host.disconnect(link);
+  assert.deepEqual(link.writes.at(-1), {cleanup: true, data: [3, 10, 17, 0, 0, 24]});
+  assert.equal(host.clock.timers.size, 0);
+});
+
+test('real bridge: Ultra model keeps its distinct power protocol', async () => {
+  const host = bridge({ScaleModel: 'Ultra'});
+  const link = await host.create('ULTRA-4.0.1');
+  await link.publish(packet());
+  await link.connection;
+  assert.deepEqual(link.writes, [{cleanup: false, data: [3, 10, 37, 0, 0, 44]}]);
   await host.disconnect(link);
   assert.deepEqual(link.writes.at(-1), {cleanup: true, data: [3, 10, 21, 0, 0, 28]});
   assert.equal(host.clock.timers.size, 0);
@@ -133,16 +155,16 @@ test('real bridge keeps four physical instances independent and fences terminal 
   await live[0].publish(packet(999));
   assert.equal(live[0].publications.length, 1);
   await live[1].entry.handlers.tare();
-  assert.deepEqual(live[1].writes.map(write => write.data[2]), [37, 1]);
-  assert.deepEqual(live[2].writes.map(write => write.data[2]), [37]);
+  assert.deepEqual(live[1].writes.map(write => write.data[2]), [18, 1]);
+  assert.deepEqual(live[2].writes.map(write => write.data[2]), [18]);
   host.plugin.onUnload();
   for (const link of live.slice(1)) await host.disconnect(link);
   assert.equal(host.clock.timers.size, 0);
-  assert.equal(live.slice(1).some(link => link.writes.some(write => write.data[2] === 21)), false);
+  assert.equal(live.slice(1).some(link => link.writes.some(write => write.data[2] === 17)), false);
 });
 
 test('real bridge: Ultra v4.0.0 compatibility shuts down without sending keep-awake', async () => {
-  const host = bridge({PowerCommandSupport: 'Shutdown only'});
+  const host = bridge({ScaleModel: 'Ultra', PowerCommandSupport: 'Shutdown only'});
   const link = await host.create('ULTRA-TEST');
   const ounceDisplay = packet(18.75); ounceDisplay[5] = 2;
   ounceDisplay[19] = ounceDisplay.slice(0, 19).reduce((sum, byte) => sum ^ byte, 0);

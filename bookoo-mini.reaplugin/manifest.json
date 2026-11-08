@@ -3,7 +3,7 @@
   "name": "BooKoo Scales Driver",
   "author": "Roy Ackerman; Decaid contributors",
   "description": "BooKoo Themis Mini and Ultra BLE scales with firmware-specific shutdown and keep-awake options.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "apiVersion": 1,
   "permissions": ["transport.ble", "log"],
   "drivers": [{
@@ -18,18 +18,19 @@
     }
   }],
   "settings": {
+    "ScaleModel": {
+      "type": "enum",
+      "label": "Scale model for power commands",
+      "description": "Mini (default) sends the public v1.4.2 shutdown/keep-alive commands. Select Ultra for Ultra firmware; its command bytes differ. All Ultra users upgrading from v0.2.0 must select Ultra here. Applies to all scales connected by this plugin; disable power commands for mixed models.",
+      "values": ["Mini", "Ultra"],
+      "default": "Mini"
+    },
     "PowerCommandSupport": {
       "type": "enum",
       "label": "Power command compatibility",
-      "description": "Choose Disabled for older/unknown firmware, Shutdown only for Ultra v4.0.0, or Shutdown and keep-awake for Ultra v4.0.1+ / Mini v1.4.2+. Applies to every scale connected by this plugin. Legacy Mini setting preserves the previous firmware checkbox.",
-      "values": ["Legacy Mini setting", "Disabled", "Shutdown only", "Shutdown and keep-awake"],
-      "default": "Legacy Mini setting"
-    },
-    "Firmware142Commands": {
-      "type": "boolean",
-      "label": "Mini v1.4.2 power commands (legacy setting)",
-      "description": "Used only when Power command compatibility is Legacy Mini setting. Existing Mini users keep their saved choice. Leave off on Mini v1.4.1. Use the compatibility selector for Ultra firmware; this checkbox does not detect model or firmware.",
-      "default": false
+      "description": "Shutdown and keep-awake is ON by default for Mini public v1.4.2+. With Scale model set to Ultra, use Shutdown only for v4.0.0 or both for v4.0.1+. Select Disabled for Mini v1.4.1 or earlier, beta v1.5.0.0806, or older/unknown Ultra firmware. Firmware is not detected automatically. Replaces the old Mini firmware checkbox.",
+      "values": ["Disabled", "Shutdown only", "Shutdown and keep-awake"],
+      "default": "Shutdown and keep-awake"
     },
     "KeepAwake": {
       "type": "boolean",

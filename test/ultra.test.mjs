@@ -8,9 +8,9 @@ test('BooKoo Scales Driver expands the display name while retaining installed de
   assert.equal(manifest.name, 'BooKoo Scales Driver');
   assert.equal(manifest.id, 'bookoo-mini.reaplugin');
   assert.equal(manifest.drivers[0].id, 'bookoo');
-  assert.equal(manifest.version, '0.2.0');
+  assert.equal(manifest.version, '0.3.0');
   assert.equal(manifest.settings.PowerCommandSupport.type, 'enum');
-  assert.equal(manifest.settings.PowerCommandSupport.default, 'Legacy Mini setting');
+  assert.equal(manifest.settings.PowerCommandSupport.default, 'Shutdown and keep-awake');
   assert.equal(load().plugin.version, manifest.version);
 });
 
@@ -32,7 +32,7 @@ for (const [mode, resets, shutsDown] of [
   ['Shutdown and keep-awake', true, true],
 ]) {
   test(`Ultra power compatibility: ${mode}`, async () => {
-    const harness = load({PowerCommandSupport: mode});
+    const harness = load({ScaleModel: 'Ultra', PowerCommandSupport: mode});
     const {driver, link} = await connected(harness);
     await flush();
     await streamFor(harness, link, 120000);
@@ -47,7 +47,7 @@ for (const [mode, resets, shutsDown] of [
 
 test('explicit compatibility overrides the saved legacy Mini firmware switch', async () => {
   for (const mode of ['Disabled', 'Shutdown only']) {
-    const harness = load({PowerCommandSupport: mode, Firmware142Commands: true});
+    const harness = load({ScaleModel: 'Ultra', PowerCommandSupport: mode, Firmware142Commands: true});
     const {driver, link} = await connected(harness);
     await streamFor(harness, link, 60000);
     assert.equal(link.writes.length, 0);
@@ -56,18 +56,18 @@ test('explicit compatibility overrides the saved legacy Mini firmware switch', a
   }
 });
 
-test('explicit legacy compatibility preserves saved Mini v1.4.2 behavior', async () => {
+test('explicit legacy compatibility upgrades to the corrected Mini v1.4.2 commands', async () => {
   const harness = load({PowerCommandSupport: 'Legacy Mini setting', Firmware142Commands: true});
   const {driver, link} = await connected(harness);
   await flush();
-  assert.deepEqual(link.writes.map(entry => entry.data), [[3, 10, 37, 0, 0, 44]]);
+  assert.deepEqual(link.writes.map(entry => entry.data), [[3, 10, 18, 0, 0, 27]]);
   await driver.disconnect(link.cleanup());
-  assert.deepEqual(link.cleanupWrites.map(entry => entry.data), [[3, 10, 21, 0, 0, 28]]);
+  assert.deepEqual(link.cleanupWrites.map(entry => entry.data), [[3, 10, 17, 0, 0, 24]]);
 });
 
 test('Ultra power options still respect independent keep-awake and shutdown switches', async () => {
   for (const [keepAwake, powerOff] of [[false, true], [true, false], [false, false]]) {
-    const harness = load({PowerCommandSupport: 'Shutdown and keep-awake', KeepAwake: keepAwake,
+    const harness = load({ScaleModel: 'Ultra', PowerCommandSupport: 'Shutdown and keep-awake', KeepAwake: keepAwake,
       PowerOffOnDisconnect: powerOff});
     const {driver, link} = await connected(harness);
     await flush();

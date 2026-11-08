@@ -1,91 +1,89 @@
-# BooKoo Scales Driver v0.2.0 for Decaid
+# BooKoo Scales Driver v0.3.0 — Mini v1.4.2 power fix
 
-Adds **BooKoo Themis Ultra** support alongside **Themis Mini** and renames the
-visible plugin to **BooKoo Scales Driver**. Both models use Decaid's normal Scale
-interface, so existing skins can use their standard weight, tare and timer controls.
+Fixes Mini shutdown and keep-alive on **public firmware v1.4.2**, and enables both
+features by default for Mini. Existing Mini and Ultra weight, battery, flow, tare
+and timer support continues through Decaid's standard Scale interface.
 
-The repository is now [Sabotage1/decaid-bookoo-scales-driver](https://github.com/Sabotage1/decaid-bookoo-scales-driver),
-previously `Sabotage1/decaid-bookoo-mini-driver`.
+## What failed and what changed
 
-## Installation and upgrading
+Previous releases incorrectly reused the Ultra's **0x15/0x25** power commands on
+Mini. BooKoo's released Mini protocol specifies different bytes:
 
-1. Download [bookoo-scales-0.2.0.zip](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.2.0/bookoo-scales-0.2.0.zip).
-2. In Decaid 0.9.0, open **Plugins → cogwheel → Install plugin → ZIP file** and
-   select the downloaded ZIP. Load/enable **BooKoo Scales Driver**.
-3. On first installation, disconnect the native BooKoo session and other BLE
-   clients such as BOOKOO N. Turn on the scale, rescan and select the plugin scale
-   as **primary** and **preferred**.
-4. Configure power commands for the scale's confirmed firmware as described below.
-5. Check a known weight, tare and timer controls before brewing.
+| Device | Shutdown | Keep-alive |
+| --- | --- | --- |
+| Mini public v1.4.2+ | `03 0A 11 00 00 18` | `03 0A 12 00 00 1B` |
+| Ultra, compatible firmware | `03 0A 15 00 00 1C` | `03 0A 25 00 00 2C` |
 
-For tracked updates, use **Install plugin → GitHub Release** with repository
-`Sabotage1/decaid-bookoo-scales-driver`, then **Check for updates** when needed.
-ZIP and folder installations are snapshots and require manual updates. Download
-the named installation asset rather than GitHub's generated source archive.
+The new **Scale model for power commands** setting selects the correct command
+set. **Mini is the default. Shutdown and keep-awake compatibility and both power
+toggles are enabled by default.** The old firmware checkbox is removed. A saved
+legacy false or Legacy Mini setting no longer silently disables the feature.
+Explicit Disabled choices and saved off toggles are preserved.
 
-The internal plugin ID/folder remains `bookoo-mini.reaplugin` and the driver ID
-stays `bookoo`. Existing Mini settings and plugin-backed preferred-scale IDs are
-preserved when updating v0.1.0. Install as an update; do not create a renamed copy.
+## Install or update
 
-## Mini and Ultra features
+1. Download [bookoo-scales-0.3.0.zip](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.3.0/bookoo-scales-0.3.0.zip).
+2. In Decaid 0.9.0, open **Plugins → cogwheel → Install plugin → ZIP file**, select
+   the ZIP and load/enable **BooKoo Scales Driver**. Tracked GitHub installations
+   can use **Check for updates**; ZIP/folder snapshots need manual installation.
+3. **Mini public v1.4.2+:** the defaults enable keep-alive and shutdown. If you
+   previously selected Disabled or turned either toggle off, enable those settings.
+4. **Ultra users upgrading from any previous release must select Ultra in the new
+   Scale model for power commands setting.** Use Shutdown only for Ultra v4.0.0,
+   or Shutdown and keep-awake for Ultra v4.0.1+. Save and reconnect if needed.
+5. For shutdown when the espresso machine sleeps, select Decaid's **Display Off**
+   scale power-management mode or the equivalent skin setting.
 
-- Signed weight in grams, battery, signed flow and timer readings.
-- Tare and timer start, stop and reset commands.
-- Optional keep-alive and shutdown on compatible firmware.
-- Ultra ounce display selections still publish grams correctly.
-- Ultra powder and automatic settlement frames are ignored and never treated as
-  live beverage weights, readiness or weight-stream activity.
-- Retained host sample provenance, command serialization, session isolation and
-  configurable weight-stream silence handling. Decaid owns reconnect behavior.
+On first installation, disconnect the native BooKoo session and other Bluetooth
+clients such as BOOKOO N, rescan, then select the plugin scale as primary and
+preferred. The plugin ID/folder remains `bookoo-mini.reaplugin` and the driver ID
+remains `bookoo`; install as an update to preserve settings and device identity.
 
-## Firmware compatibility and power settings
+For tracked installation choose **Install plugin → GitHub Release** and enter
+`Sabotage1/decaid-bookoo-scales-driver`. Download the named installation asset,
+rather than GitHub's generated source archive.
 
-Set **Power command compatibility** manually; model/firmware are not detected:
+## Compatibility and behavior
 
-| Firmware | Select |
-| --- | --- |
-| Mini v1.4.1, older or unknown firmware; Ultra v3.1.2 and earlier | Disabled |
-| Ultra release v4.0.0 | Shutdown only |
-| Ultra release v4.0.1+ or Mini v1.4.2+ | Shutdown and keep-awake |
+Power commands require **public Mini v1.4.2+**. On Mini v1.4.1 or earlier, beta
+v1.5.0.0806, or unconfirmed firmware, select **Disabled**. Ultra shutdown requires
+release v4.0.0+; Ultra keep-alive requires release v4.0.1+. Neither model nor
+firmware is automatically detected. All active scales share these settings;
+disable power commands for mixed Mini/Ultra connections.
 
-For **Ultra v4.0.1+**, select **Shutdown and keep-awake** and leave both **Keep
-scale awake while connected** and **Power off on intentional disconnect** on.
-Save, then reconnect if necessary. For shutdown when the espresso machine sleeps,
-also use Decaid's **Display Off** scale power-management mode.
+Keep-alive starts after the first accepted weight and repeats every **60 seconds**
+after the preceding attempt finishes. It resets the countdown without changing
+the configured auto-off duration. Shutdown is sent through cleanup GATT authority
+before a healthy intentional disconnect, including machine sleep, manual
+disconnect or switching scales. Unload/reload, link loss, initialization failure
+and protocol silence skip shutdown. Ultra shutdown is unavailable while charging.
 
-Keep-alive sends the countdown-reset command after the first accepted weight and
-every **60 seconds** after the preceding attempt finishes. It does not change the
-scale's saved auto-off duration. Shutdown runs before a healthy intentional
-disconnect, including machine sleep, manual disconnect and switching scales.
-Plugin unload/reload, link loss, failed initialization and protocol silence skip
-shutdown. A powered-off scale may need its physical button before reconnecting.
+With Decaid scale power management disabled, keep-alive may continue during
+machine sleep. Plugin defaults do not change that host policy. A powered-off scale
+may need its physical button before reconnecting. No remote power-on or firmware
+updater is included. Existing mode/state restrictions on tare and timers apply.
 
-The default **Legacy Mini setting** preserves the old `Firmware142Commands`
-checkbox, which defaults to off. Explicit compatibility selections override that
-checkbox. The two power toggles can independently disable their commands.
-Settings apply to every scale connected by this plugin; use capabilities supported
-by all active scales. Keep-alive continues while connected if Decaid scale power
-management is disabled.
+The load log reports effective settings, for example:
 
-Ultra shutdown is unavailable while charging. Tare and timer mode restrictions
-also apply. The driver does not change scale modes, calibration, presets, powder
-weight or automatic stop settings. An acknowledged BLE write does not prove the
-device performed an action. See the [full guide](https://github.com/Sabotage1/decaid-bookoo-scales-driver#readme)
-and [manufacturer Ultra protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_ultra_scale/protocols.md).
+```text
+[bookoo-scales] Power protocol: Mini; keep-alive on; shutdown on
+```
 
-## Validation and downloads
+## Validation
 
-**38 automated tests pass**, including the unmodified Decaid v0.9.0 JavaScript BLE
-bridge with simulated Dart/GATT. The build checks syntax, archive contents and
-byte-for-byte agreement between packaged files and source.
+**49 automated tests pass**, including exact golden Mini and Ultra frames,
+repeated keep-alive, legacy-setting upgrades, preserved opt-outs, readiness,
+serialized writes and the unmodified Decaid v0.9.0 JavaScript BLE bridge with
+simulated Dart/GATT. Packaging verifies archive contents against source.
 
-The previous v0.1.0 Mini build had a limited live connection/empty-scale check on
-Mini v1.4.1 and Android Decaid 0.9.0: 178 samples over 18 seconds with battery
-reporting. **The new v0.2.0 build, Ultra hardware and power commands have not been
-physically verified.** Check known weights, tare/timers, a supervised brew stop,
-long sessions, sleep and reconnect before relying on it. This release includes no
-firmware updater or remote power-on.
+**Physical Mini v1.4.2 and Ultra acceptance remains pending.** The fix is verified
+against BooKoo's public protocol and automated tests, not an observed physical
+shutdown. Prior Mini evidence covered only a v0.1.0 empty-scale stream on v1.4.1.
 
-The release contains exactly one installation ZIP and [SHA256SUMS](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.2.0/SHA256SUMS).
-Full source, protocol references, troubleshooting and license attribution are in
-the repository. Community plugin, GPL-3.0-or-later.
+See the [full guide](https://github.com/Sabotage1/decaid-bookoo-scales-driver#readme),
+[BooKoo Mini protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_mini_scale/protocols.md)
+(updated October 30, 2026) and
+[Ultra protocol](https://github.com/BooKooCode/OpenSource/blob/main/bookoo_ultra_scale/protocols.md).
+The release includes one installation ZIP and
+[SHA256SUMS](https://github.com/Sabotage1/decaid-bookoo-scales-driver/releases/download/v0.3.0/SHA256SUMS).
+Community plugin, GPL-3.0-or-later.
